@@ -1,0 +1,72 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect your Neon account",
+        "description": "Paste a Neon API key from console.neon.tech/app/settings/api-keys.",
+        "data": {
+          "api_key": "Neon API key",
+          "label": "Label (used in entity IDs)"
+        }
+      },
+      "scopes": {
+        "title": "Select Neon scopes to monitor",
+        "description": "Choose your personal account and/or organisations.\n\n{choices}",
+        "data": { "scope_ids": "Scopes" }
+      },
+      "reauth_confirm": {
+        "title": "Re-authenticate Neon",
+        "description": "The previous Neon API key was rejected. Paste a fresh one.",
+        "data": { "api_key": "Neon API key" }
+      }
+    },
+    "error": {
+      "invalid_auth": "Neon rejected this API key.",
+      "cannot_connect": "Could not reach console.neon.tech."
+    },
+    "abort": {
+      "already_configured": "This API key is already configured.",
+      "reauth_successful": "API key updated."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Neon Billing options",
+        "data": {
+          "update_interval_min": "Update interval (minutes)",
+          "split_branches_root_child": "Split branch costs by root / child (extra API calls)",
+          "currency": "Local currency code (e.g. NZD); leave blank to disable mirrors",
+          "fx_rate_usd_to_local": "Exchange rate (USD → local). Required if currency is set.",
+          "threshold_pcts": "Threshold percentages (comma-separated, e.g. 80,90)"
+        }
+      }
+    },
+    "error": {
+      "fx_required_when_currency_set": "Set an exchange rate above zero when a currency is configured."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "compute_hours": { "name": "Compute hours" },
+      "storage_gb": { "name": "Storage" },
+      "data_transfer_gb": { "name": "Data transfer" },
+      "branch_count_root": { "name": "Root branches" },
+      "branch_count_child": { "name": "Child branches" },
+      "branch_count_extra": { "name": "Branches over allowance" },
+      "compute_cost_est": { "name": "Compute (est.)" },
+      "storage_cost_est": { "name": "Storage (est.)" },
+      "branches_root_cost_est": { "name": "Root branches (est.)" },
+      "branches_child_cost_est": { "name": "Child branches (est.)" },
+      "data_transfer_cost_est": { "name": "Data transfer (est.)" },
+      "extra_branches_cost_est": { "name": "Extra branches (est.)" },
+      "total_cost_est": { "name": "Total charges (est.)" },
+      "spending_limit": { "name": "Spending limit" },
+      "spending_limit_used_pct": { "name": "Spending limit used" }
+    },
+    "binary_sensor": {
+      "over_limit": { "name": "Over spending limit" },
+      "threshold_pct": { "name": "Over {pct}% of spending limit" }
+    }
+  }
+}
