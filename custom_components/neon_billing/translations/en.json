@@ -11,7 +11,7 @@
       },
       "scopes": {
         "title": "Select Neon scopes to monitor",
-        "description": "Choose your personal account and/or organisations.\n\n{choices}",
+        "description": "Choose your personal account and/or organisations.",
         "data": { "scope_ids": "Scopes" }
       },
       "reauth_confirm": {
