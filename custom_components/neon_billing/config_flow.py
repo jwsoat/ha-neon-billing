@@ -10,6 +10,12 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers.selector import (
+    SelectOptionDict,
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
+)
 
 from .api import NeonAPIError, NeonAuthError, NeonClient
 from .const import (
@@ -127,14 +133,19 @@ class NeonConfigFlow(ConfigFlow, domain=DOMAIN):
                 },
             )
 
+        options = [
+            SelectOptionDict(value=sid, label=label) for sid, label in scope_choices.items()
+        ]
         schema = vol.Schema(
-            {vol.Required("scope_ids", default=list(scope_choices.keys())): vol.All(
-                [vol.In(list(scope_choices.keys()))], vol.Length(min=1)
-            )}
+            {
+                vol.Required("scope_ids", default=list(scope_choices.keys())): SelectSelector(
+                    SelectSelectorConfig(
+                        options=options, multiple=True, mode=SelectSelectorMode.LIST
+                    )
+                )
+            }
         )
-        return self.async_show_form(step_id="scopes", data_schema=schema, description_placeholders={
-            "choices": "\n".join(f"- {sid}: {label}" for sid, label in scope_choices.items())
-        })
+        return self.async_show_form(step_id="scopes", data_schema=schema)
 
     async def async_step_reauth(self, _entry_data: dict[str, Any]) -> FlowResult:
         return await self.async_step_reauth_confirm()
