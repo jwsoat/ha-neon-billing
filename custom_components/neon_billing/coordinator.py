@@ -131,13 +131,19 @@ class NeonCoordinator:
 
     async def fetch(self) -> dict[str, ScopeState]:
         user = await self._client.get_user()
-        billing = user.get("billing_account", {})
+        billing = user.get("billing_account") or {}
         quota_reset_raw = billing.get("quota_reset_at_last")
-        if quota_reset_raw is None:
-            raise NeonAPIError("billing_account.quota_reset_at_last missing from /users/me")
-        quota_reset = datetime.fromisoformat(quota_reset_raw.replace("Z", "+00:00"))
         now = datetime.now(tz=UTC)
-        period_start, period_end = billing_period_bounds(quota_reset, now)
+        if quota_reset_raw:
+            quota_reset = datetime.fromisoformat(quota_reset_raw.replace("Z", "+00:00"))
+            period_start, period_end = billing_period_bounds(quota_reset, now)
+        else:
+            _LOGGER.debug(
+                "billing_account.quota_reset_at_last missing; defaulting to calendar-month start"
+            )
+            period_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+            next_month = period_start.replace(year=period_start.year + (1 if period_start.month == 12 else 0), month=1 if period_start.month == 12 else period_start.month + 1)
+            period_end = next_month
 
         results = await asyncio.gather(
             *(self._fetch_scope(scope, period_start, period_end) for scope in self._scopes),
