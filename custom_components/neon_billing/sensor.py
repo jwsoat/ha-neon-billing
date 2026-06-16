@@ -100,7 +100,7 @@ CONSUMPTION_SENSORS: tuple[NeonSensorDescription, ...] = (
         key="branch_count_extra",
         translation_key="branch_count_extra",
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda s: None if s.consumption is None else max(0, s.consumption.branch_count_total - 0),
+        value_fn=lambda s: None if s.consumption is None else max(0, s.consumption.branch_count_total - s.branch_allowance),
         is_unit=True,
     ),
 )

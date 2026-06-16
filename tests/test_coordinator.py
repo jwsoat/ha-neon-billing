@@ -162,3 +162,32 @@ async def test_coordinator_split_mode_fetches_branch_consumption(neon_client: Ne
     scope = data["org-alpha"]
     assert scope.charges["branches_root"] >= Decimal("0")
     assert scope.charges["compute"] == Decimal("0")
+
+
+@respx.mock
+@freeze_time("2026-06-16T12:00:00Z")
+async def test_coordinator_stores_plan_branch_allowance(neon_client: NeonClient) -> None:
+    """branch_allowance must be populated from plan defaults so sensor can compute overage."""
+    respx.get(f"{NEON_API_BASE}/users/me").mock(
+        return_value=httpx.Response(200, json=load_fixture("users_me.json"))
+    )
+    respx.get(f"{NEON_API_BASE}/consumption_history/account").mock(
+        return_value=httpx.Response(200, json=load_fixture("consumption_history_account.json"))
+    )
+    respx.get(f"{NEON_API_BASE}/organizations/org-alpha/billing/spending_limit").mock(
+        return_value=httpx.Response(200, json=load_fixture("spending_limit.json"))
+    )
+    respx.get(f"{NEON_API_BASE}/projects").mock(
+        return_value=httpx.Response(200, json={"projects": []})
+    )
+
+    coordinator = NeonCoordinator(
+        client=neon_client,
+        scopes=[_scope("org-alpha", plan="launch", org_id="org-alpha")],
+        rates=DEFAULT_RATES,
+        allowances=DEFAULT_ALLOWANCES,
+        split_branches=False,
+    )
+    data = await coordinator.fetch()
+    scope = data["org-alpha"]
+    assert scope.branch_allowance == 500  # Launch plan allowance from DEFAULT_ALLOWANCES

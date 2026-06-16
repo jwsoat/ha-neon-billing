@@ -51,6 +51,7 @@ class ScopeState:
     spending_limit_cents: int | None = None
     used_pct: Decimal | None = None
     plan_name: str | None = None
+    branch_allowance: int = 0
 
 
 def aggregate_consumption(
@@ -221,4 +222,6 @@ class NeonCoordinator:
             limit_usd = Decimal(state.spending_limit_cents) / Decimal(100)
             state.used_pct = (state.charges["total"] / limit_usd * Decimal(100)).quantize(Decimal("0.01"))
         state.plan_name = scope.plan
+        plan_allowance = self._allowances.get(scope.plan, self._allowances["custom"])
+        state.branch_allowance = int(plan_allowance["branches"])
         return state
