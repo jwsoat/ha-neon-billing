@@ -5,11 +5,11 @@ import hashlib
 import logging
 from typing import Any
 
-import httpx
 import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.selector import (
     SelectOptionDict,
     SelectSelector,
@@ -80,15 +80,16 @@ class NeonConfigFlow(ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(unique)
             self._abort_if_unique_id_configured()
 
-            async with httpx.AsyncClient() as http:
-                client = NeonClient(http=http, api_key=api_key)
-                try:
-                    self._user_payload = await client.get_user()
-                    self._orgs = await client.list_organizations()
-                except NeonAuthError:
-                    errors["base"] = "invalid_auth"
-                except NeonAPIError:
-                    errors["base"] = "cannot_connect"
+            http = get_async_client(self.hass)
+            client = NeonClient(http=http, api_key=api_key)
+            try:
+                self._user_payload = await client.get_user()
+                self._orgs = await client.list_organizations()
+            except NeonAuthError:
+                errors["base"] = "invalid_auth"
+            except NeonAPIError as exc:
+                _LOGGER.warning("Neon API error during config flow: %s", exc)
+                errors["base"] = "cannot_connect"
             if not errors:
                 self._api_key = api_key
                 self._label = label
@@ -156,14 +157,15 @@ class NeonConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             api_key = user_input[CONF_API_KEY].strip()
-            async with httpx.AsyncClient() as http:
-                client = NeonClient(http=http, api_key=api_key)
-                try:
-                    await client.get_user()
-                except NeonAuthError:
-                    errors["base"] = "invalid_auth"
-                except NeonAPIError:
-                    errors["base"] = "cannot_connect"
+            http = get_async_client(self.hass)
+            client = NeonClient(http=http, api_key=api_key)
+            try:
+                await client.get_user()
+            except NeonAuthError:
+                errors["base"] = "invalid_auth"
+            except NeonAPIError as exc:
+                _LOGGER.warning("Neon API error during reauth: %s", exc)
+                errors["base"] = "cannot_connect"
             if not errors:
                 entry = self._get_reauth_entry()
                 self.hass.config_entries.async_update_entry(

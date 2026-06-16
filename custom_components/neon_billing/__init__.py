@@ -5,11 +5,11 @@ import logging
 from dataclasses import dataclass
 from datetime import timedelta
 
-import httpx
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .api import NeonAPIError, NeonAuthError, NeonClient, NeonRateLimitError
@@ -38,13 +38,12 @@ PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.BINARY_SENSOR]
 class NeonRuntimeData:
     coordinator: DataUpdateCoordinator[dict[str, ScopeState]]
     client: NeonClient
-    http: httpx.AsyncClient
     label: str
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Neon Billing from a config entry."""
-    http = httpx.AsyncClient()
+    http = get_async_client(hass)
     client = NeonClient(http=http, api_key=entry.data[CONF_API_KEY])
 
     scopes = [
@@ -86,15 +85,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         await coordinator.async_config_entry_first_refresh()
     except ConfigEntryAuthFailed:
-        await http.aclose()
         raise
     except Exception as exc:
-        await http.aclose()
         _LOGGER.exception("Neon Billing first refresh failed")
         raise ConfigEntryNotReady(f"first refresh failed: {exc}") from exc
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = NeonRuntimeData(
-        coordinator=coordinator, client=client, http=http, label=entry.data[CONF_LABEL]
+        coordinator=coordinator, client=client, label=entry.data[CONF_LABEL]
     )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(_async_reload_entry))
@@ -104,8 +101,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if not await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         return False
-    runtime: NeonRuntimeData = hass.data[DOMAIN].pop(entry.entry_id)
-    await runtime.http.aclose()
+    hass.data[DOMAIN].pop(entry.entry_id)
     return True
 
 
