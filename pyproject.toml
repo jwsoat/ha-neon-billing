@@ -1,0 +1,36 @@
+[project]
+name = "ha-neon-billing"
+version = "0.1.0"
+description = "Home Assistant custom integration for Neon serverless Postgres billing"
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.12"
+authors = [{ name = "Dylan Wech", email = "info@jwsoat.com" }]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.0",
+  "pytest-asyncio>=0.23",
+  "pytest-homeassistant-custom-component>=0.13",
+  "respx>=0.21",
+  "freezegun>=1.4",
+  "ruff>=0.6",
+  "mypy>=1.10",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W", "B", "UP", "SIM", "ASYNC", "PT"]
+ignore = ["E501"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+files = ["custom_components/neon_billing/pricing.py", "custom_components/neon_billing/api.py"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]

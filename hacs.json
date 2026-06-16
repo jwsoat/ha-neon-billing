@@ -1,0 +1,6 @@
+{
+  "name": "Neon Billing",
+  "render_readme": true,
+  "homeassistant": "2026.6.0",
+  "country": ["NZ", "AU", "US", "GB"]
+}
