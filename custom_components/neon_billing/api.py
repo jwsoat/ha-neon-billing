@@ -26,30 +26,37 @@ def billing_period_bounds(
 ) -> tuple[datetime, datetime]:
     """Return the current billing period (start, end) anchored on quota reset day.
 
-    Period is one month long. If `now` is before `quota_reset_at_last + 1 month`,
-    the period is `[quota_reset_at_last, quota_reset_at_last + 1 month]`.
-    Otherwise, advance month by month until we find the period that contains `now`.
+    Period is one month long, anchored on the day-of-month of ``quota_reset_at_last``.
+    When the target month is shorter than the anchor day, the boundary clamps to the
+    target month's last day, but subsequent iterations re-anchor from the original
+    anchor day (i.e. the clamp does not drift forward in time).
     """
+    anchor_day = quota_reset_at_last.day
     start = quota_reset_at_last
-    end = _add_one_month(start)
+    end = _add_one_month(start, anchor_day)
     while now >= end:
         start = end
-        end = _add_one_month(start)
+        end = _add_one_month(start, anchor_day)
     return start, end
 
 
-def _add_one_month(dt: datetime) -> datetime:
-    """Add one calendar month, clamping to last day if the target month is shorter."""
+def _add_one_month(dt: datetime, anchor_day: int) -> datetime:
+    """Return ``dt`` shifted forward one calendar month, re-clamped from ``anchor_day``.
+
+    ``anchor_day`` is the original day-of-month we want to land on whenever the
+    target month is long enough. If the target month is shorter, the day clamps
+    to that month's last day, but the next call still uses ``anchor_day`` (not
+    the clamped day) as its target.
+    """
     year = dt.year + (1 if dt.month == 12 else 0)
     month = 1 if dt.month == 12 else dt.month + 1
-    day = min(dt.day, _days_in_month(year, month))
+    day = min(anchor_day, _days_in_month(year, month))
     return dt.replace(year=year, month=month, day=day)
 
 
 def _days_in_month(year: int, month: int) -> int:
     next_first = datetime(year + 1, 1, 1) if month == 12 else datetime(year, month + 1, 1)
-    last_day = (next_first - timedelta(days=1)).day
-    return last_day
+    return (next_first - timedelta(days=1)).day
 
 
 class NeonClient:

@@ -134,6 +134,27 @@ async def test_list_branches_calls_project_endpoint(client: NeonClient) -> None:
     assert branches[0]["parent_id"] is None
 
 
+@respx.mock
+async def test_get_branch_consumption_returns_branch_list(client: NeonClient) -> None:
+    route = respx.get(f"{NEON_API_BASE}/consumption_history/v2/branches").mock(
+        return_value=httpx.Response(200, json=_load("branch_consumption.json"))
+    )
+    start = datetime(2026, 6, 1, tzinfo=timezone.utc)
+    end = datetime(2026, 7, 1, tzinfo=timezone.utc)
+    branches = await client.get_branch_consumption(
+        org_id="org-alpha", period_start=start, period_end=end
+    )
+    assert route.called
+    params = route.calls.last.request.url.params
+    assert params["from"] == "2026-06-01T00:00:00+00:00"
+    assert params["to"] == "2026-07-01T00:00:00+00:00"
+    assert params["org_id"] == "org-alpha"
+    assert params["granularity"] == "daily"
+    assert len(branches) == 2
+    assert branches[0]["id"] == "br-root"
+    assert branches[1]["compute_time_seconds"] == 396000
+
+
 def test_billing_period_bounds_anchors_on_quota_reset() -> None:
     quota_reset = datetime(2026, 5, 15, 12, 0, 0, tzinfo=timezone.utc)
     now = datetime(2026, 6, 20, 9, 30, 0, tzinfo=timezone.utc)
@@ -148,3 +169,14 @@ def test_billing_period_bounds_when_now_before_first_reset() -> None:
     start, end = billing_period_bounds(quota_reset, now)
     assert start == datetime(2026, 5, 15, 12, 0, 0, tzinfo=timezone.utc)
     assert end == datetime(2026, 6, 15, 12, 0, 0, tzinfo=timezone.utc)
+
+
+def test_billing_period_bounds_does_not_drift_day_31_anchor() -> None:
+    """Quota reset on day 31 must keep landing on day 31 / month-end after Feb clamp."""
+    quota_reset = datetime(2026, 1, 31, 12, 0, 0, tzinfo=timezone.utc)
+    # After several months past a Feb clamp, the period should still anchor on day 31
+    # (or each month's last day), not on day 28 frozen from Feb.
+    now = datetime(2026, 11, 15, 0, 0, 0, tzinfo=timezone.utc)
+    start, end = billing_period_bounds(quota_reset, now)
+    assert start == datetime(2026, 10, 31, 12, 0, 0, tzinfo=timezone.utc)
+    assert end == datetime(2026, 11, 30, 12, 0, 0, tzinfo=timezone.utc)
