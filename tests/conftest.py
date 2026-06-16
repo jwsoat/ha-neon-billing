@@ -9,14 +9,21 @@ per-test setup or pytest_socket's own config) is inert. Pure unit tests in this
 suite never perform real network I/O. Once HA-flavoured integration tests are
 added they should opt back into the socket guard via the standard HA fixtures
 or via per-test ``disable_socket`` markers.
+
+If ``pytest_socket`` is not installed (it ships transitively via
+``pytest-homeassistant-custom-component``; not pinned directly in our dev
+deps) the workaround silently no-ops — no other code in this repo relies on
+it.
 """
 from __future__ import annotations
-
-import pytest_socket
 
 
 def pytest_configure() -> None:
     """Neutralise pytest-socket so HA's per-test disable does nothing."""
+    try:
+        import pytest_socket
+    except ImportError:
+        return
 
     def _noop_disable(*_args: object, **_kwargs: object) -> None:
         return None
