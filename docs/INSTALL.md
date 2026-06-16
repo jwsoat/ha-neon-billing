@@ -6,7 +6,7 @@
 
 ## Install via HACS (recommended)
 1. HACS → Integrations → 3-dot menu → Custom repositories.
-2. Add `https://github.com/dwech/ha-neon-billing` with category **Integration**.
+2. Add `https://github.com/jwsoat/ha-neon-billing` with category **Integration**.
 3. Search for "Neon Billing" in HACS and install.
 4. Restart Home Assistant.
 

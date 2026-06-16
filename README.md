@@ -1,6 +1,6 @@
 # Neon Billing for Home Assistant
 
-[![CI](https://github.com/dwech/ha-neon-billing/actions/workflows/ci.yml/badge.svg)](https://github.com/dwech/ha-neon-billing/actions/workflows/ci.yml)
+[![CI](https://github.com/jwsoat/ha-neon-billing/actions/workflows/ci.yml/badge.svg)](https://github.com/jwsoat/ha-neon-billing/actions/workflows/ci.yml)
 
 Tracks Neon (serverless Postgres) consumption, estimated charges, and spending-limit usage as Home Assistant sensors.
 
