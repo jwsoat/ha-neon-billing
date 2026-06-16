@@ -1,0 +1,6 @@
+{
+  "organizations": [
+    { "id": "org-alpha", "name": "Alpha Org", "plan": "launch" },
+    { "id": "org-beta", "name": "Beta Org", "plan": "scale" }
+  ]
+}

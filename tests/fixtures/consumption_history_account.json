@@ -1,0 +1,21 @@
+{
+  "periods": [
+    {
+      "period_id": "2026-06",
+      "period_start": "2026-06-01T00:00:00Z",
+      "period_end": "2026-07-01T00:00:00Z",
+      "consumption": [
+        {
+          "timeframe_start": "2026-06-01T00:00:00Z",
+          "timeframe_end": "2026-06-16T11:00:00Z",
+          "active_time_seconds": 1080000,
+          "compute_time_seconds": 1296000,
+          "written_data_bytes": 5000000000,
+          "synthetic_storage_size_bytes": 3221225472,
+          "data_storage_bytes_hour": 1100000000000,
+          "data_transfer_bytes": 8000000000
+        }
+      ]
+    }
+  ]
+}

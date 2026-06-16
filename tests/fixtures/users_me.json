@@ -1,0 +1,28 @@
+{
+  "id": "user-abc",
+  "email": "user@example.com",
+  "name": "Dylan",
+  "plan": "launch",
+  "max_autoscaling_limit": 4.0,
+  "active_seconds_limit": 360000,
+  "projects_limit": 100,
+  "branches_limit": 500,
+  "compute_seconds_limit": 1080000,
+  "auth_accounts": [],
+  "billing_account": {
+    "state": "active",
+    "payment_source": "card",
+    "subscription_type": "launch",
+    "payment_method": "card",
+    "quota_reset_at_last": "2026-06-01T00:00:00Z",
+    "name": "Dylan Wech",
+    "email": "billing@example.com",
+    "address_city": "Auckland",
+    "address_country": "NZ",
+    "address_line1": "1 Example St",
+    "address_line2": "",
+    "address_postal_code": "1010",
+    "address_state": "AKL",
+    "plan_details": { "name": "launch" }
+  }
+}

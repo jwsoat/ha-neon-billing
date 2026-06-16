@@ -1,0 +1,16 @@
+{
+  "branches": [
+    {
+      "id": "br-root",
+      "compute_time_seconds": 900000,
+      "synthetic_storage_size_bytes": 2147483648,
+      "data_storage_bytes_hour": 800000000000
+    },
+    {
+      "id": "br-dev",
+      "compute_time_seconds": 396000,
+      "synthetic_storage_size_bytes": 1073741824,
+      "data_storage_bytes_hour": 300000000000
+    }
+  ]
+}

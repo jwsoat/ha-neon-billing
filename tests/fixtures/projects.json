@@ -1,0 +1,5 @@
+{
+  "projects": [
+    { "id": "proj-1", "name": "main", "org_id": "org-alpha", "created_at": "2026-05-01T00:00:00Z" }
+  ]
+}
