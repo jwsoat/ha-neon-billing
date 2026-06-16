@@ -90,7 +90,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise
     except Exception as exc:
         await http.aclose()
-        raise ConfigEntryNotReady("first refresh failed") from exc
+        _LOGGER.exception("Neon Billing first refresh failed")
+        raise ConfigEntryNotReady(f"first refresh failed: {exc}") from exc
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = NeonRuntimeData(
         coordinator=coordinator, client=client, http=http, label=entry.data[CONF_LABEL]
