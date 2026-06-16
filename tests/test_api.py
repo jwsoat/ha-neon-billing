@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 import httpx
@@ -17,7 +17,6 @@ from custom_components.neon_billing.api import (
     billing_period_bounds,
 )
 from custom_components.neon_billing.const import NEON_API_BASE
-
 
 FIXTURES = Path(__file__).parent / "fixtures"
 
@@ -64,8 +63,8 @@ async def test_get_consumption_uses_period_bounds(client: NeonClient) -> None:
     route = respx.get(f"{NEON_API_BASE}/consumption_history/account").mock(
         return_value=httpx.Response(200, json=_load("consumption_history_account.json"))
     )
-    start = datetime(2026, 6, 1, tzinfo=timezone.utc)
-    end = datetime(2026, 7, 1, tzinfo=timezone.utc)
+    start = datetime(2026, 6, 1, tzinfo=UTC)
+    end = datetime(2026, 7, 1, tzinfo=UTC)
     data = await client.get_account_consumption(org_id="org-alpha", period_start=start, period_end=end)
     assert route.called
     params = route.calls.last.request.url.params
@@ -139,8 +138,8 @@ async def test_get_branch_consumption_returns_branch_list(client: NeonClient) ->
     route = respx.get(f"{NEON_API_BASE}/consumption_history/v2/branches").mock(
         return_value=httpx.Response(200, json=_load("branch_consumption.json"))
     )
-    start = datetime(2026, 6, 1, tzinfo=timezone.utc)
-    end = datetime(2026, 7, 1, tzinfo=timezone.utc)
+    start = datetime(2026, 6, 1, tzinfo=UTC)
+    end = datetime(2026, 7, 1, tzinfo=UTC)
     branches = await client.get_branch_consumption(
         org_id="org-alpha", period_start=start, period_end=end
     )
@@ -156,27 +155,27 @@ async def test_get_branch_consumption_returns_branch_list(client: NeonClient) ->
 
 
 def test_billing_period_bounds_anchors_on_quota_reset() -> None:
-    quota_reset = datetime(2026, 5, 15, 12, 0, 0, tzinfo=timezone.utc)
-    now = datetime(2026, 6, 20, 9, 30, 0, tzinfo=timezone.utc)
+    quota_reset = datetime(2026, 5, 15, 12, 0, 0, tzinfo=UTC)
+    now = datetime(2026, 6, 20, 9, 30, 0, tzinfo=UTC)
     start, end = billing_period_bounds(quota_reset, now)
-    assert start == datetime(2026, 6, 15, 12, 0, 0, tzinfo=timezone.utc)
-    assert end == datetime(2026, 7, 15, 12, 0, 0, tzinfo=timezone.utc)
+    assert start == datetime(2026, 6, 15, 12, 0, 0, tzinfo=UTC)
+    assert end == datetime(2026, 7, 15, 12, 0, 0, tzinfo=UTC)
 
 
 def test_billing_period_bounds_when_now_before_first_reset() -> None:
-    quota_reset = datetime(2026, 5, 15, 12, 0, 0, tzinfo=timezone.utc)
-    now = datetime(2026, 5, 20, 9, 30, 0, tzinfo=timezone.utc)
+    quota_reset = datetime(2026, 5, 15, 12, 0, 0, tzinfo=UTC)
+    now = datetime(2026, 5, 20, 9, 30, 0, tzinfo=UTC)
     start, end = billing_period_bounds(quota_reset, now)
-    assert start == datetime(2026, 5, 15, 12, 0, 0, tzinfo=timezone.utc)
-    assert end == datetime(2026, 6, 15, 12, 0, 0, tzinfo=timezone.utc)
+    assert start == datetime(2026, 5, 15, 12, 0, 0, tzinfo=UTC)
+    assert end == datetime(2026, 6, 15, 12, 0, 0, tzinfo=UTC)
 
 
 def test_billing_period_bounds_does_not_drift_day_31_anchor() -> None:
     """Quota reset on day 31 must keep landing on day 31 / month-end after Feb clamp."""
-    quota_reset = datetime(2026, 1, 31, 12, 0, 0, tzinfo=timezone.utc)
+    quota_reset = datetime(2026, 1, 31, 12, 0, 0, tzinfo=UTC)
     # After several months past a Feb clamp, the period should still anchor on day 31
     # (or each month's last day), not on day 28 frozen from Feb.
-    now = datetime(2026, 11, 15, 0, 0, 0, tzinfo=timezone.utc)
+    now = datetime(2026, 11, 15, 0, 0, 0, tzinfo=UTC)
     start, end = billing_period_bounds(quota_reset, now)
-    assert start == datetime(2026, 10, 31, 12, 0, 0, tzinfo=timezone.utc)
-    assert end == datetime(2026, 11, 30, 12, 0, 0, tzinfo=timezone.utc)
+    assert start == datetime(2026, 10, 31, 12, 0, 0, tzinfo=UTC)
+    assert end == datetime(2026, 11, 30, 12, 0, 0, tzinfo=UTC)

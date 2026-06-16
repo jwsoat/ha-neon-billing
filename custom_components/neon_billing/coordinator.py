@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 import logging
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
 from enum import Enum
 from typing import Any
@@ -136,7 +136,7 @@ class NeonCoordinator:
         if quota_reset_raw is None:
             raise NeonAPIError("billing_account.quota_reset_at_last missing from /users/me")
         quota_reset = datetime.fromisoformat(quota_reset_raw.replace("Z", "+00:00"))
-        now = datetime.now(tz=timezone.utc)
+        now = datetime.now(tz=UTC)
         period_start, period_end = billing_period_bounds(quota_reset, now)
 
         results = await asyncio.gather(

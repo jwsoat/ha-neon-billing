@@ -1,7 +1,6 @@
 """Tests for the per-entry DataUpdateCoordinator."""
 from __future__ import annotations
 
-from datetime import datetime, timezone
 from decimal import Decimal
 
 import httpx

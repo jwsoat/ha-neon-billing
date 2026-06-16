@@ -43,10 +43,7 @@ def _unique_id_for_key(api_key: str) -> str:
 
 
 def _parse_thresholds(raw: str | list[int]) -> list[int]:
-    if isinstance(raw, list):
-        items = raw
-    else:
-        items = [int(x.strip()) for x in raw.split(",") if x.strip()]
+    items = raw if isinstance(raw, list) else [int(x.strip()) for x in raw.split(",") if x.strip()]
     return sorted({i for i in items if 1 <= i <= 500})
 
 

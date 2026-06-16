@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import httpx
-import pytest
 import respx
 from freezegun import freeze_time
 from homeassistant.core import HomeAssistant
@@ -66,9 +65,11 @@ async def test_setup_and_unload(
 
 async def test_sensors_created_for_each_scope(hass: HomeAssistant, enable_custom_integrations: None) -> None:
     """Verify consumption/cost/spending_limit sensors materialize after setup."""
-    import respx, httpx
+    import httpx
+    import respx
     from freezegun import freeze_time
     from homeassistant.helpers import entity_registry as er
+
     from custom_components.neon_billing.const import NEON_API_BASE
     with respx.mock, freeze_time("2026-06-16T12:00:00Z"):
         respx.get(f"{NEON_API_BASE}/users/me").mock(
@@ -101,9 +102,11 @@ async def test_sensors_created_for_each_scope(hass: HomeAssistant, enable_custom
 
 async def test_threshold_binary_sensor_created(hass: HomeAssistant, enable_custom_integrations: None) -> None:
     """Verify over_limit + a configured threshold binary sensor materialize."""
-    import respx, httpx
+    import httpx
+    import respx
     from freezegun import freeze_time
     from homeassistant.helpers import entity_registry as er
+
     from custom_components.neon_billing.const import CONF_THRESHOLD_PCTS, NEON_API_BASE
     with respx.mock, freeze_time("2026-06-16T12:00:00Z"):
         respx.get(f"{NEON_API_BASE}/users/me").mock(
