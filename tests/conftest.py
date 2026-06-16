@@ -17,6 +17,15 @@ it.
 """
 from __future__ import annotations
 
+import json
+from collections.abc import AsyncIterator
+from pathlib import Path
+
+import httpx
+import pytest
+
+from custom_components.neon_billing.api import NeonClient
+
 
 def pytest_configure() -> None:
     """Neutralise pytest-socket so HA's per-test disable does nothing."""
@@ -30,3 +39,21 @@ def pytest_configure() -> None:
 
     pytest_socket.disable_socket = _noop_disable  # type: ignore[assignment]
     pytest_socket.enable_socket()
+
+
+FIXTURES = Path(__file__).parent / "fixtures"
+
+
+def load_fixture(name: str) -> dict:
+    return json.loads((FIXTURES / name).read_text())
+
+
+@pytest.fixture
+async def http_client() -> AsyncIterator[httpx.AsyncClient]:
+    async with httpx.AsyncClient() as client:
+        yield client
+
+
+@pytest.fixture
+async def neon_client(http_client: httpx.AsyncClient) -> NeonClient:
+    return NeonClient(http=http_client, api_key="test-key")
