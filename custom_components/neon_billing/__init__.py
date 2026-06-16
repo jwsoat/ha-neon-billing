@@ -31,8 +31,7 @@ from .coordinator import NeonCoordinator, NeonScope, ScopeState
 
 _LOGGER = logging.getLogger(__name__)
 
-# PLATFORMS: binary_sensor still pending (Task 9).
-PLATFORMS: list[Platform] = [Platform.SENSOR]
+PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.BINARY_SENSOR]
 
 
 @dataclass
