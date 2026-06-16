@@ -99,6 +99,55 @@ async def test_coordinator_handles_missing_spending_limit(neon_client: NeonClien
 
 @respx.mock
 @freeze_time("2026-06-16T12:00:00Z")
+async def test_coordinator_consumption_paywall_degrades_but_keeps_branches(
+    neon_client: NeonClient,
+) -> None:
+    """Launch-plan orgs return 403 from consumption; coordinator must still surface branch counts."""
+    respx.get(f"{NEON_API_BASE}/users/me").mock(
+        return_value=httpx.Response(200, json=load_fixture("users_me.json"))
+    )
+    respx.get(f"{NEON_API_BASE}/consumption_history/account").mock(
+        return_value=httpx.Response(
+            403, json={"code": "", "message": "endpoint is included with Scale plans and above"}
+        )
+    )
+    respx.get(f"{NEON_API_BASE}/organizations/org-alpha/billing/spending_limit").mock(
+        return_value=httpx.Response(200, json=load_fixture("spending_limit.json"))
+    )
+    respx.get(f"{NEON_API_BASE}/projects").mock(
+        return_value=httpx.Response(200, json={"projects": [{"id": "p1"}]})
+    )
+    respx.get(f"{NEON_API_BASE}/projects/p1/branches").mock(
+        return_value=httpx.Response(
+            200,
+            json={
+                "branches": [
+                    {"id": "b1", "parent_id": None},
+                    {"id": "b2", "parent_id": "b1"},
+                ]
+            },
+        )
+    )
+
+    coordinator = NeonCoordinator(
+        client=neon_client,
+        scopes=[_scope("org-alpha", org_id="org-alpha")],
+        rates=DEFAULT_RATES,
+        allowances=DEFAULT_ALLOWANCES,
+        split_branches=False,
+    )
+    data = await coordinator.fetch()
+    scope = data["org-alpha"]
+    assert scope.status is ScopeStatus.DEGRADED
+    assert scope.consumption is not None
+    assert scope.consumption.branch_count_root == 1
+    assert scope.consumption.branch_count_child == 1
+    assert scope.consumption.compute_hours == 0.0
+    assert scope.spending_limit_cents == 5000
+
+
+@respx.mock
+@freeze_time("2026-06-16T12:00:00Z")
 async def test_coordinator_partial_failure_marks_scope_degraded(neon_client: NeonClient) -> None:
     respx.get(f"{NEON_API_BASE}/users/me").mock(
         return_value=httpx.Response(200, json=load_fixture("users_me.json"))

@@ -176,9 +176,18 @@ class NeonCoordinator:
             state.status = ScopeStatus.AUTH_ERROR
             return state
         except (NeonAPIError, NeonRateLimitError) as exc:
-            _LOGGER.warning("consumption fetch failed for %s: %s", scope.scope_id, exc)
-            state.status = ScopeStatus.DEGRADED
-            return state
+            err = str(exc)
+            if "client error 400" in err or "client error 403" in err:
+                _LOGGER.info(
+                    "consumption unavailable for %s (likely Launch plan or missing org_id): %s",
+                    scope.scope_id, err,
+                )
+                cons_payload = {"periods": []}
+                state.status = ScopeStatus.DEGRADED
+            else:
+                _LOGGER.warning("consumption fetch failed for %s: %s", scope.scope_id, exc)
+                state.status = ScopeStatus.DEGRADED
+                return state
 
         # Branches (always — needed for root/child counts).
         branch_count_root = 0
@@ -197,10 +206,18 @@ class NeonCoordinator:
                         branch_count_child += 1
 
             if self._split:
-                branch_consumption = await self._client.get_branch_consumption(
-                    org_id=scope.org_id, period_start=period_start, period_end=period_end
-                )
-                branch_splits = _aggregate_branch_split(branch_consumption, branch_parents)
+                try:
+                    branch_consumption = await self._client.get_branch_consumption(
+                        org_id=scope.org_id, period_start=period_start, period_end=period_end
+                    )
+                    branch_splits = _aggregate_branch_split(branch_consumption, branch_parents)
+                except (NeonAPIError, NeonRateLimitError) as exc:
+                    err = str(exc)
+                    if "client error 400" in err or "client error 403" in err:
+                        _LOGGER.info("branch consumption unavailable for %s: %s", scope.scope_id, err)
+                        state.status = ScopeStatus.DEGRADED
+                    else:
+                        raise
         except NeonAuthError:
             state.status = ScopeStatus.AUTH_ERROR
             return state
