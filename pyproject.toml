@@ -7,6 +7,9 @@ license = { text = "MIT" }
 requires-python = ">=3.12"
 authors = [{ name = "Dylan Wech", email = "info@jwsoat.com" }]
 
+[tool.setuptools.packages.find]
+include = ["custom_components*"]
+
 [project.optional-dependencies]
 dev = [
   "pytest>=8.0",
